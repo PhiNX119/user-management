@@ -1,0 +1,31 @@
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light mb-5">
+    <a class="navbar-brand" th:href="@{/}">User Management</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-autox">
+            <li class="nav-item active" th:if="${#authorization.expression('isAuthenticated()')}">
+                <a class="nav-link" th:href="@{/index}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item dropdown" th:if="${#authorization.expression('isAuthenticated()')}">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Manage
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" th:href="@{/admin/user-list}">User List</a>
+<!--                    <div class="dropdown-divider"></div>-->
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Personal Project</a>
+            </li>
+        </ul>
+        <ul class="my-2 my-lg-0 navbar-nav" th:if="${#authorization.expression('isAuthenticated()')}">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/logout}">Logout</a>
+            </li>
+        </ul>
+    </div>
+</nav>

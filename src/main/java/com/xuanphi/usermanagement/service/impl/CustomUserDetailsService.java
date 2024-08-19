@@ -1,8 +1,10 @@
 package com.xuanphi.usermanagement.service.impl;
 
-import com.xuanphi.usermanagement.modal.entity.Role;
-import com.xuanphi.usermanagement.modal.entity.User;
+import com.xuanphi.usermanagement.model.entity.CustomUserDetails;
+import com.xuanphi.usermanagement.model.entity.Role;
+import com.xuanphi.usermanagement.model.entity.User;
 import com.xuanphi.usermanagement.repository.UserRepository;
+import org.hibernate.Hibernate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,21 +26,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElse(null);
 
-        if (user != null) {
-            return new org.springframework.security.core.userdetails.User(user.getUsername(),
-                    user.getPassword(),
-                    mapRolesToAuthorities(user.getRoles()));
+        if (user != null && user.isActive()) {
+            return new CustomUserDetails(user);
         }else{
             throw new UsernameNotFoundException("Invalid username or password.");
         }
-    }
-
-    private Collection < ? extends GrantedAuthority> mapRolesToAuthorities(Collection <Role> roles) {
-        Collection < ? extends GrantedAuthority> mapRoles = roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
-        return mapRoles;
     }
 }

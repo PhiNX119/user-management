@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+>
+<head>
+    <th:block th:insert="~{fragments/bootstrap.html :: bootstrapFragment}"></th:block>
+</head>
+<body>
+<header th:insert="~{fragments/navbar.html :: navbar}"></header>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>User List</h2>
+            <hr>
+            <table id="account-list" class="table table-striped" style="width:100%">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Password</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${userList}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.username}"></td>
+                    <td th:text="${user.password}"></td>
+                    <td>
+                        <div class="btn btn-success btn-sm mb-1" th:each="role : ${user.roles}" th:text="${role.name}"></div>
+                    </td>
+                    <td>
+                        <a th:href="@{/account/detail(id=${user.id})}" class="btn btn-secondary btn-sm">Details</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    new DataTable('#account-list');
+</script>
+</body>

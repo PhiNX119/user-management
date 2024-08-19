@@ -1,7 +1,7 @@
 package com.xuanphi.usermanagement.controller;
 
-import com.xuanphi.usermanagement.modal.dto.UserDto;
-import com.xuanphi.usermanagement.modal.entity.User;
+import com.xuanphi.usermanagement.model.dto.UserDto;
+import com.xuanphi.usermanagement.model.entity.User;
 import com.xuanphi.usermanagement.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -13,69 +13,77 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
 
-
+/**
+ * @author phinx
+ * @description controller class contain authorization function
+ */
 @Controller
 public class AuthController {
-
     private UserService userService;
 
     public AuthController(UserService userService) {
         this.userService = userService;
     }
 
-    // handler method to handle home page request
+    /**
+     * @author phinx
+     * @description redirect to home page
+     */
     @GetMapping("/index")
-    public String home(){
+    public String home() {
         return "index";
     }
 
-    // handler method to handle login request
+    /**
+     * @author phinx
+     * @description redirect to login page
+     */
     @GetMapping("/login")
-    public String login(){
+    public String login() {
         return "user/login";
     }
 
-    // handler method to handle user registration form request
+    /**
+     * @author phinx
+     * @description redirect to register page
+     */
     @GetMapping("/register")
-    public String showRegistrationForm(Model model){
+    public String showRegistrationForm(Model model) {
         // create model object to store form data
         UserDto user = new UserDto();
         model.addAttribute("user", user);
         return "user/register";
     }
 
-    // handler method to handle user registration form submit request
+    /**
+     * @author phinx
+     * @description handler method to handle user registration form submit request
+     */
     @PostMapping("/register/save")
     public String registration(@Valid @ModelAttribute("user") UserDto userDto,
                                BindingResult result,
-                               Model model){
-        User existingUser = userService.findUserByUsername(userDto.getUsername());
+                               Model model) {
+        User existingUser = userService.getUserByUsername(userDto.getUsername());
 
-        if(existingUser != null){
-            if(existingUser.getEmail() != null && !existingUser.getEmail().isEmpty()){
+        if (existingUser != null) {
+            if (existingUser.getEmail() != null && !existingUser.getEmail().isEmpty()) {
                 result.rejectValue("email", null,
                         "There is already an account registered with the same email");
             }
-            if(existingUser.getUsername() != null && !existingUser.getUsername().isEmpty()){
+            if (existingUser.getUsername() != null && !existingUser.getUsername().isEmpty()) {
                 result.rejectValue("username", null,
                         "There is already an account registered with the same username");
             }
         }
 
-        if(result.hasErrors()){
+        if (result.hasErrors()) {
             model.addAttribute("user", userDto);
             return "user/register";
         }
 
-        userService.saveUser(userDto);
+        userService.saveNewUser(userDto);
         return "redirect:/register?success";
     }
 
-    // handler method to handle list of users
-    @GetMapping("/users")
-    public String users(Model model){
-        List<UserDto> users = userService.findAllUsers();
-        model.addAttribute("users", users);
-        return "user/users";
-    }
+
 }

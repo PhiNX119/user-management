@@ -1,15 +1,20 @@
 package com.xuanphi.usermanagement.service;
 
 
-import com.xuanphi.usermanagement.modal.dto.UserDto;
-import com.xuanphi.usermanagement.modal.entity.User;
+import com.xuanphi.usermanagement.model.dto.UserDto;
+import com.xuanphi.usermanagement.model.entity.CustomUserDetails;
+import com.xuanphi.usermanagement.model.entity.User;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public interface UserService {
-    void saveUser(UserDto userDto);
+    CustomUserDetails getUserDetail();
 
-    User findUserByUsername(String username);
+    void saveNewUser(UserDto userDto);
 
-    List<UserDto> findAllUsers();
+    User getUserByUsername(String username);
+
+    List<UserDto> getUserList();
 }

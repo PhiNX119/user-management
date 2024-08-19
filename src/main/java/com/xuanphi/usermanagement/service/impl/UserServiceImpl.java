@@ -1,14 +1,21 @@
 package com.xuanphi.usermanagement.service.impl;
 
-import com.xuanphi.usermanagement.modal.dto.UserDto;
-import com.xuanphi.usermanagement.modal.entity.Role;
-import com.xuanphi.usermanagement.modal.entity.User;
+import com.xuanphi.usermanagement.model.dto.UserDto;
+import com.xuanphi.usermanagement.model.entity.CustomUserDetails;
+import com.xuanphi.usermanagement.model.entity.Role;
+import com.xuanphi.usermanagement.model.entity.User;
 import com.xuanphi.usermanagement.repository.RoleRepository;
 import com.xuanphi.usermanagement.repository.UserRepository;
 import com.xuanphi.usermanagement.service.UserService;
+import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder) {
@@ -29,47 +37,52 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void saveUser(UserDto userDto) {
+    public CustomUserDetails getUserDetail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            return userDetails;
+        }
+        return null;
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        return user;
+    }
+
+    @Transactional
+    @Override
+    public void saveNewUser(UserDto userDto) {
         User user = new User();
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setEmail(userDto.getEmail());
-        user.setUsername(userDto.getUsername());
-        // encrypt the password using spring security
+        user.loadFromDto(userDto);
+
+        // Encrypt the password
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
-        Role role = roleRepository.findByName("ROLE_ADMIN");
-        if(role == null){
-            role = checkRoleExist();
-        }
-        user.setRoles(Arrays.asList(role));
+        // Set roles
+        List<Role> roleList = userDto.getRoles().stream()
+                .map(roleDto -> {
+                    Role role = roleRepository.findByName(roleDto.getName())
+                            .orElseGet(() -> roleRepository.save(new Role(null, roleDto.getName(), null)));
+                    return role;
+                })
+                .collect(Collectors.toList());
+
+        user.setRoles(roleList);
+
         userRepository.save(user);
     }
 
     @Override
-    public User findUserByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    @Override
-    public List<UserDto> findAllUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map((user) -> mapToUserDto(user))
+    public List<UserDto> getUserList() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    UserDto userDto = new UserDto();
+                    userDto.loadFromEntity(user);
+                    return userDto;
+                })
                 .collect(Collectors.toList());
-    }
-
-    private UserDto mapToUserDto(User user){
-        UserDto userDto = new UserDto();
-        userDto.setFirstName(user.getFirstName());
-        userDto.setLastName(user.getLastName());
-        userDto.setEmail(user.getEmail());
-        return userDto;
-    }
-
-    private Role checkRoleExist(){
-        Role role = new Role();
-        role.setName("ROLE_ADMIN");
-        return roleRepository.save(role);
     }
 }

@@ -1,9 +1,12 @@
 package com.xuanphi.usermanagement.repository;
 
-import com.xuanphi.usermanagement.modal.entity.Role;
+import com.xuanphi.usermanagement.model.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface RoleRepository extends JpaRepository<Role, Long> {
+import java.util.Optional;
 
-    Role findByName(String name);
+@Repository
+public interface RoleRepository extends JpaRepository<Role, Integer> {
+    Optional<Role> findByName(String name);
 }
