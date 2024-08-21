@@ -1,22 +1,31 @@
 package com.xuanphi.usermanagement.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.xuanphi.usermanagement.model.dto.UserDto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Nationalized;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
+import java.security.Principal;
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User implements Serializable {
+@Table(name = "_user")
+@EntityListeners(AuditingEntityListener.class)
+public class User implements UserDetails, Principal, Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -47,41 +56,74 @@ public class User implements Serializable {
     @Nationalized
     private String address;
 
-    @Column
+    @Column(unique = true)
     private String email;
 
-    @Column
+    @Column(unique = true)
     private String phoneNumber;
 
-    @Column(nullable = false)
-    private boolean isActive;
+    @Column
+    private boolean accountLocked;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_role",
-            joinColumns = {@JoinColumn(name = "user_id")},
-            inverseJoinColumns = {@JoinColumn(name = "role_id")}
-    )
+    @Column
+    private boolean enable;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JsonIgnore
     private Collection<Role> roles;
 
-    public void loadFromDto(UserDto userDto) {
-        this.id = userDto.getId();
-        this.username = userDto.getUsername();
-        this.password = userDto.getPassword();
-        this.firstName = userDto.getFirstName();
-        this.lastName = userDto.getLastName();
-        this.dateOfBirth = userDto.getDateOfBirth();
-        this.gender = userDto.isGender();
-        this.address = userDto.getAddress();
-        this.email = userDto.getEmail();
-        this.phoneNumber = userDto.getPhoneNumber();
-        this.isActive = userDto.isActive();
-        this.roles = userDto.getRoles().stream()
-                .map(roleDto -> {
-                    Role role = new Role();
-                    role.loadFromDto(roleDto);
-                    return role;
-                })
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createDate;
+
+    @LastModifiedDate
+    @Column(insertable = false)
+    private LocalDateTime lastModifiedDate;
+
+    @Override
+    public String getName() {
+        return username;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Collection<? extends GrantedAuthority> mapRoles = roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
+        return mapRoles;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !accountLocked;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enable;
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 }

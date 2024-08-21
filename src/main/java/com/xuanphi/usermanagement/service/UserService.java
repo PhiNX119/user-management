@@ -1,20 +1,21 @@
 package com.xuanphi.usermanagement.service;
 
 
-import com.xuanphi.usermanagement.model.dto.UserDto;
-import com.xuanphi.usermanagement.model.entity.CustomUserDetails;
+import com.xuanphi.usermanagement.model.payload.request.AuthenticationRequest;
+import com.xuanphi.usermanagement.model.payload.request.RegistrationRequest;
+import com.xuanphi.usermanagement.model.payload.response.AuthenticationResponse;
 import com.xuanphi.usermanagement.model.entity.User;
+import jakarta.mail.MessagingException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public interface UserService {
-    CustomUserDetails getUserDetail();
-
-    void saveNewUser(UserDto userDto);
 
     User getUserByUsername(String username);
 
-    List<UserDto> getUserList();
+    void registerUser(RegistrationRequest registrationRequest) throws MessagingException;
+
+    void activateAccount(String token) throws MessagingException;
+
+    AuthenticationResponse authenticateUser(AuthenticationRequest authenticationRequest);
 }

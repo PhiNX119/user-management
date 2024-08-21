@@ -60,7 +60,7 @@ public class UserDto {
         this.address = user.getAddress();
         this.email = user.getEmail();
         this.phoneNumber = user.getPhoneNumber();
-        this.isActive = user.isActive();
+        this.isActive = user.isEnabled();
         this.roles = user.getRoles().stream()
                 .map(role -> {
                     RoleDto roleDto = new RoleDto();
